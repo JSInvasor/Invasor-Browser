@@ -63,15 +63,15 @@ process.on("uncaughtException", errorHandler);
 process.on("unhandledRejection", errorHandler);
 
 if (process.argv.length < 7) {
-  log("error", "Usage: node browser.js <target> <threads> <proxies.txt> <rate> <time>");
+  log("error", "Usage: node browser.js <target> <time> <threads> <rate> <proxies.txt>");
   process.exit(1);
 }
 
 const targetURL = process.argv[2];
-const threads = parseInt(process.argv[3], 10);
-const proxyFile = process.argv[4];
+const duration = parseInt(process.argv[3], 10);
+const threads = parseInt(process.argv[4], 10);
 const rates = process.argv[5];
-const duration = parseInt(process.argv[6], 10);
+const proxyFile = process.argv[6];
 
 const sleep = duration => new Promise(resolve => setTimeout(resolve, duration * 1000));
 
