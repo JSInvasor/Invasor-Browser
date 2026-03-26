@@ -1,0 +1,14 @@
+{
+  "name": "invasor-browser",
+  "version": "2.0.0",
+  "description": "Cloudflare challenge bypass browser automation - authed tests only",
+  "main": "browser.js",
+  "scripts": {
+    "start": "node browser.js"
+  },
+  "dependencies": {
+    "puppeteer-real-browser": "^4.1.1",
+    "async": "^3.2.6",
+    "hpack": "^0.1.1"
+  }
+}
