@@ -181,24 +181,24 @@ const getRandomBrowser = () => {
 };
 const generateHeaders = (browser) => {
     const versions = {
-        chrome: { min: 130, max: 134 },
-        safari: { min: 16, max: 18 },
-        brave: { min: 128, max: 134 },
-        firefox: { min: 124, max: 136 },
-        mobile: { min: 128, max: 134 },
-        opera: { min: 108, max: 117 },
-        operagx: { min: 108, max: 117 }
+        chrome: { min: 144, max: 146 },
+        safari: { min: 17, max: 18 },
+        brave: { min: 144, max: 146 },
+        firefox: { min: 135, max: 139 },
+        mobile: { min: 144, max: 146 },
+        opera: { min: 118, max: 120 },
+        operagx: { min: 118, max: 120 }
     };
 
     const version = Math.floor(Math.random() * (versions[browser].max - versions[browser].min + 1)) + versions[browser].min;
     const fullVersions = {
-        brave: "134.0.6998.88",
-        chrome: "134.0.6998.88",
-        firefox: "136.0",
-        safari: "18.3.1",
-        mobile: "134.0.6998.88",
-        opera: "117.0.5408.43",
-        operagx: "117.0.5408.43"
+        brave: "146.0.7680.169",
+        chrome: "146.0.7680.169",
+        firefox: "139.0",
+        safari: "18.5",
+        mobile: "146.0.7680.169",
+        opera: "120.0.5519.40",
+        operagx: "120.0.5519.40"
     };
 
     // T?o header "Sec-CH-UA-Full-Version-List" t? gi? tr? full version
@@ -505,40 +505,40 @@ encodeFrame(0, 8, updateWindow)
                                 head["sec-ch-ua"] = `${randomString}`;
                                 head["dnt"] = "1";
                             } else if (threadvalue == 2) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["sec-ch-ua-mobile"] = `${randomString}`;
                             } else if (threadvalue == 3) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["sec-ch-ua-platform"] = `${randomString}`;
                             } else if (threadvalue == 4) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 
                                 head["upgrade-insecure-requests"] = `${randomString}`;
                             } else if (threadvalue === 5) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 
                                 head["sec-ch-ua-platform"] = `"Windows"`;
                                 head["upgrade-insecure-requests"] = "1";
                             } else if (threadvalue === 6) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["dnt"] = "1";                                
                                 head["upgrade-insecure-requests"] = "1";
                                 head["accept"] = `${randomString}`;
                             } else if (threadvalue === 7) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 
                                 head["upgrade-insecure-requests"] = "1";
                                 head["accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7";
                                 head["sec-fetch-site"] = `${randomString}`;
                             } else if (threadvalue === 8) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 
                                 head["upgrade-insecure-requests"] = "1";
                                 head["accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7";
                                 head["sec-fetch-site"] = "none";
                                 head["sec-fetch-mode"] = `${randomString}`;
                             } else if (threadvalue === 9) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 
                                 head["upgrade-insecure-requests"] = "1";
                                 head["accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7";
@@ -546,7 +546,7 @@ encodeFrame(0, 8, updateWindow)
                                 head["sec-fetch-mode"] = "navigate";
                                 head["sec-fetch-user"] = `${randomString}`;
                             } else if (threadvalue === 10) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["dnt"] = "1";
                                 
                                 head["upgrade-insecure-requests"] = "1";
@@ -557,7 +557,7 @@ encodeFrame(0, 8, updateWindow)
                                 head["sec-fetch-user"] = "?1";
                                 head["sec-fetch-dest"] = `${randomString}`;
                             } else if (threadvalue === 11) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["Accept-Language"] = "en-US";
                                 head["upgrade-insecure-requests"] = "1";
                                 
@@ -568,7 +568,7 @@ encodeFrame(0, 8, updateWindow)
                                 head["sec-fetch-dest"] = "document";
                                 head["accept-encoding"] = `${randomString}`;
                             } else if (threadvalue === 12) {
-                                head["sec-ch-ua"] = `"Google Chrome";v="134", "Not)A;Brand";v="24", "Chromium";v="134"`;
+                                head["sec-ch-ua"] = `"Google Chrome";v="146", "Not)A;Brand";v="24", "Chromium";v="146"`;
                                 head["sec-ch-ua-mobile"] = "?0";
                                 head["sec-ch-ua-platform"] = `"Windows"`;
                                 head["upgrade-insecure-requests"] = "1";
