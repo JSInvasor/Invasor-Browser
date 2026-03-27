@@ -7,8 +7,8 @@
     "start": "node browser.js"
   },
   "dependencies": {
-    "puppeteer-real-browser": "^4.1.1",
+    "puppeteer-real-browser": "^1.4.4",
     "async": "^3.2.6",
-    "hpack": "^0.1.1"
+    "hpack": "^1.0.0"
   }
 }
