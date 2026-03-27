@@ -21,41 +21,22 @@ const c = {
   cyan:    "\x1b[36m",
   white:   "\x1b[37m",
   gray:    "\x1b[90m",
-  orange:  "\x1b[38;2;255;140;50m",
+  steel:   "\x1b[38;2;180;190;205m",
 };
 
-// [Invasor@Browser] prefix - brackets & @ gray, Invasor & Browser deep warm orange
-const PREFIX = `${c.gray}[${c.orange}Invasor${c.gray}@${c.orange}Browser${c.gray}]${c.reset} `;
-
-const symbols = {
-  info:    ">",
-  success: ">",
-  warn:    ">",
-  error:   ">",
-  proxy:   ">",
-  pink:    ">",
-};
+const PREFIX = `${c.gray}[${c.steel}Invasor${c.gray}@${c.steel}Browser${c.gray}]${c.reset} `;
 
 function a(type, text) {
-  const symbol = symbols[type] || ">";
-  let color = c.white;
-
-  if (type === "error") color = c.red;
-  if (type === "success") color = c.green;
-  if (type === "warn") color = c.yellow;
-  if (type === "info" || type === "proxy") color = c.orange;
-  if (type === "pink") color = c.pink;
-
-  console.a(`${PREFIX}${color}${symbol} ${text}${c.reset}`);
+  console.log(`${PREFIX}${c.gray}&${c.reset} ${c.white}${text}${c.reset}`);
 }
 
 // ────────────────────────────────────────────────
 // Startup banner
 // ────────────────────────────────────────────────
 function b() {
-  console.a(`${c.gray}>${c.reset} ${c.white}i hope you find some peace of mind${c.reset}`);
-  console.a(`${c.gray}>${c.reset} ${c.white}i hope you find some paradise${c.reset}`);
-  console.a();
+  console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some peace of mind${c.reset}`);
+  console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some paradise${c.reset}`);
+  console.log();
 }
 
 const d = error => a("error", error);
@@ -278,7 +259,7 @@ async function k() {
   a("info", `Starting Browser`);
   a("info", `Target: ${targetURL}`);
   a("info", `Proxies: ${proxies.length} | Threads: ${threads} | Duration: ${duration}s`);
-  console.a();
+  console.log();
 
   for (const browserProxy of proxies) {
     queue.push({ browserProxy });
