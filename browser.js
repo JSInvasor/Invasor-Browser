@@ -100,41 +100,49 @@ async function h(page, browserProxy) {
     const challengeType = isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed";
     a("info", `Detected ${challengeType} challenge → ${browserProxy}`);
     try {
-      // Poll for challenge resolution with multiple click attempts
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await e(8);
+      // Wait for Turnstile to fully render
+      a("info", `Waiting for challenge to render → ${browserProxy}`);
+      await e(12);
 
+      // Poll for challenge resolution with multiple click attempts
+      for (let attempt = 0; attempt < 4; attempt++) {
         // Check if already solved
         const title = await page.title();
         if (!title.includes("Just a moment") && !title.includes("Attention Required")) {
-          a("info", `Challenge auto-solved → ${browserProxy}`);
+          a("info", `Challenge solved → ${browserProxy}`);
           break;
         }
 
         // Try Turnstile iframe checkbox
         const frames = page.frames();
-        const turnstileFrame = frames.find(f =>
-          f.url().includes("challenges.cloudflare.com")
-        );
-
-        if (turnstileFrame) {
-          a("info", `Found Turnstile frame (attempt ${attempt + 1}) → ${browserProxy}`);
-          try {
-            const checkbox = await turnstileFrame.$('input[type="checkbox"], .cb-lb, .mark');
-            if (checkbox) {
-              await e(1);
-              await checkbox.click();
-              a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
-              await e(5);
-              continue;
-            }
-          } catch (err) {}
+        for (const frame of frames) {
+          const url = frame.url();
+          if (url.includes("challenges.cloudflare.com") || url.includes("turnstile")) {
+            a("info", `Found CF frame: ${url.substring(0, 60)}... (attempt ${attempt + 1}) → ${browserProxy}`);
+            try {
+              await frame.waitForSelector('input[type="checkbox"], .cb-lb, .mark, .ctp-checkbox-label, #challenge-stage', { timeout: 8000 });
+              const checkbox = await frame.$('input[type="checkbox"]') ||
+                await frame.$('.cb-lb') ||
+                await frame.$('.ctp-checkbox-label') ||
+                await frame.$('.mark');
+              if (checkbox) {
+                const cbox = await checkbox.boundingBox();
+                if (cbox) {
+                  await page.mouse.click(cbox.x + cbox.width / 2, cbox.y + cbox.height / 2);
+                  a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
+                  await e(8);
+                  continue;
+                }
+              }
+            } catch (err) {}
+          }
         }
 
         // Fallback: click challenge container on main page
         try {
           const el = await page.$("#challenge-stage") ||
             await page.$(".cf-turnstile") ||
+            await page.$("iframe[src*='challenges.cloudflare']") ||
             await page.$("body > div.main-wrapper > div > div > div > div");
           if (el) {
             const box = await el.boundingBox();
@@ -145,7 +153,7 @@ async function h(page, browserProxy) {
           }
         } catch (err) {}
 
-        await e(5);
+        await e(8);
       }
     } catch (error) {
       a("error", `Error in challenge detection: ${error.message}`);
@@ -192,7 +200,7 @@ async function i(targetURL, browserProxy) {
     let navSuccess = false;
     for (let attempt = 0; attempt < 3 && !navSuccess; attempt++) {
       try {
-        await page.goto(targetURL, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await page.goto(targetURL, { waitUntil: "networkidle2", timeout: 45000 });
         navSuccess = true;
       } catch (navErr) {
         a("warn", `Nav attempt ${attempt + 1}/3 failed → ${browserProxy}: ${navErr.message}`);
