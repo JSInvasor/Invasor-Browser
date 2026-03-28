@@ -96,7 +96,7 @@ if (isNaN(rps) || rps <= 0) {
 const MAX_RAM_PERCENTAGE = 70;
 const RESTART_DELAY = 1000;
 if (cluster.isMaster) {
-  
+	console.log(`[Invasor] Flooding ${target} | ${thread} threads | ${rps} rps | ${time}s | mode: ${proxyr === 'raw' ? 'raw' : 'proxy'}`);
 	for (let counter = 1; counter <= thread; counter++) {
 		cluster.fork();
 	}

