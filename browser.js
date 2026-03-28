@@ -98,48 +98,55 @@ async function h(page, browserProxy) {
 
   if (isTurnstile || isLegacyChallenge || isManagedChallenge) {
     const challengeType = isTurnstile ? "Turnstile" : isLegacyChallenge ? "Legacy" : "Managed";
-    a("pink", `Detected ${challengeType} challenge → ${browserProxy}`);
+    a("info", `Detected ${challengeType} challenge → ${browserProxy}`);
     try {
-      await e(5);
+      // Poll for challenge resolution with multiple click attempts
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await e(8);
 
-      // Try Turnstile checkbox (iframe-based)
-      const turnstileFrame = page.frames().find(f =>
-        f.url().includes("challenges.cloudflare.com")
-      );
+        // Check if already solved
+        const title = await page.title();
+        if (!title.includes("Just a moment") && !title.includes("Attention Required")) {
+          a("info", `Challenge auto-solved → ${browserProxy}`);
+          break;
+        }
 
-      if (turnstileFrame) {
-        a("info", `Found Turnstile frame → ${browserProxy}`);
+        // Try Turnstile iframe checkbox
+        const frames = page.frames();
+        const turnstileFrame = frames.find(f =>
+          f.url().includes("challenges.cloudflare.com")
+        );
+
+        if (turnstileFrame) {
+          a("info", `Found Turnstile frame (attempt ${attempt + 1}) → ${browserProxy}`);
+          try {
+            const checkbox = await turnstileFrame.$('input[type="checkbox"], .cb-lb, .mark');
+            if (checkbox) {
+              await e(1);
+              await checkbox.click();
+              a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
+              await e(5);
+              continue;
+            }
+          } catch (err) {}
+        }
+
+        // Fallback: click challenge container on main page
         try {
-          await turnstileFrame.waitForSelector('input[type="checkbox"], .cb-lb, #challenge-stage', { timeout: 15000 });
-          const checkbox = await turnstileFrame.$('input[type="checkbox"], .cb-lb');
-          if (checkbox) {
-            await e(2);
-            await checkbox.click();
-            a("info", `Clicked Turnstile checkbox → ${browserProxy}`);
+          const el = await page.$("#challenge-stage") ||
+            await page.$(".cf-turnstile") ||
+            await page.$("body > div.main-wrapper > div > div > div > div");
+          if (el) {
+            const box = await el.boundingBox();
+            if (box) {
+              await page.mouse.click(box.x + 20, box.y + 20);
+              a("info", `Clicked challenge element (attempt ${attempt + 1}) → ${browserProxy}`);
+            }
           }
-        } catch (e) {
-          a("warn", `Turnstile frame interaction failed: ${e.message}`);
-        }
-      }
+        } catch (err) {}
 
-      // Fallback: try the legacy wrapper selector
-      try {
-        await page.waitForSelector("#challenge-stage, .cf-turnstile, body > div.main-wrapper > div > div > div > div", { timeout: 10000 });
-        const challengeEl = await page.$("#challenge-stage") ||
-          await page.$(".cf-turnstile") ||
-          await page.$("body > div.main-wrapper > div > div > div > div");
-        if (challengeEl) {
-          const box = await challengeEl.boundingBox();
-          if (box) {
-            await page.mouse.click(box.x + 20, box.y + 20);
-          }
-        }
-      } catch (e) {
-        // selector not found, might have auto-solved
+        await e(5);
       }
-
-      // Wait for challenge to resolve
-      await e(10);
     } catch (error) {
       a("error", `Error in challenge detection: ${error.message}`);
     }
