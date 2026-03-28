@@ -166,24 +166,27 @@ async function h(page, browserProxy) {
 
 async function i(targetURL, browserProxy) {
   const userAgent = g();
+  const isRaw = browserProxy === "raw";
   let browser;
   try {
+    const launchArgs = [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--ignore-certificate-errors",
+      "--ignore-certificate-errors-spki-list",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--disable-browser-side-navigation",
+      "--disable-features=IsolateOrigins,site-per-process,NetworkService",
+      "--disable-web-security",
+      "--allow-running-insecure-content",
+      `--user-agent=${userAgent}`,
+    ];
+    if (!isRaw) launchArgs.unshift(`--proxy-server=${browserProxy}`);
+
     const result = await connect({
       headless: "auto",
-      args: [
-        `--proxy-server=${browserProxy}`,
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--ignore-certificate-errors",
-        "--ignore-certificate-errors-spki-list",
-        "--disable-gpu",
-        "--disable-dev-shm-usage",
-        "--disable-browser-side-navigation",
-        "--disable-features=IsolateOrigins,site-per-process,NetworkService",
-        "--disable-web-security",
-        "--allow-running-insecure-content",
-        `--user-agent=${userAgent}`,
-      ],
+      args: launchArgs,
       turnstile: true,
       fingerprint: true,
       connectOption: {
