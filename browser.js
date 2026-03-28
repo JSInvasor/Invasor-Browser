@@ -151,19 +151,22 @@ async function h(page, browserProxy) {
 
 async function i(targetURL, browserProxy) {
   const userAgent = g();
-  const [proxyHost, proxyPort] = browserProxy.split(":");
   let browser;
   try {
     const result = await connect({
       headless: "auto",
       args: [
-        `--proxy-server=http://${browserProxy}`,
+        `--proxy-server=${browserProxy}`,
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--ignore-certificate-errors",
+        "--ignore-certificate-errors-spki-list",
         "--disable-gpu",
         "--disable-dev-shm-usage",
         "--disable-browser-side-navigation",
+        "--disable-features=IsolateOrigins,site-per-process,NetworkService",
+        "--disable-web-security",
+        "--allow-running-insecure-content",
         `--user-agent=${userAgent}`,
       ],
       turnstile: true,
@@ -177,7 +180,20 @@ async function i(targetURL, browserProxy) {
     const page = result.page;
 
     page.setDefaultNavigationTimeout(60 * 1000);
-    await page.goto(targetURL, { waitUntil: "domcontentloaded" });
+
+    // Retry navigation up to 3 times on network errors
+    let navSuccess = false;
+    for (let attempt = 0; attempt < 3 && !navSuccess; attempt++) {
+      try {
+        await page.goto(targetURL, { waitUntil: "domcontentloaded", timeout: 30000 });
+        navSuccess = true;
+      } catch (navErr) {
+        a("warn", `Nav attempt ${attempt + 1}/3 failed → ${browserProxy}: ${navErr.message}`);
+        if (attempt < 2) await e(2);
+      }
+    }
+    if (!navSuccess) throw new Error(`Navigation failed after 3 attempts`);
+
     await h(page, browserProxy);
 
     const title = await page.title();
