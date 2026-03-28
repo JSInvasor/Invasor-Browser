@@ -489,6 +489,4 @@ client.on("error", error => {
 			return
 });
 
-	});
-
 }//
