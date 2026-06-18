@@ -26,8 +26,10 @@ const c = {
 
 const PREFIX = `${c.gray}[${c.steel}Invasor${c.gray}@${c.steel}Browser${c.gray}]${c.reset} `;
 
+const typeColors = { error: c.red, warn: c.yellow, info: c.cyan, success: c.green };
 function a(type, text) {
-  console.log(`${PREFIX}${c.gray}&${c.reset} ${c.white}${text}${c.reset}`);
+  const color = typeColors[type] || c.white;
+  console.log(`${PREFIX}${color}[${type}]${c.reset} ${c.white}${text}${c.reset}`);
 }
 
 // ────────────────────────────────────────────────
@@ -249,7 +251,7 @@ async function j(targetURL, browserProxy, task, done, retries = 0) {
     spawn("node", [
       "Invasor.js",
       targetURL,
-      "100",
+      String(duration),
       "2",
       response.browserProxy,
       rates,

